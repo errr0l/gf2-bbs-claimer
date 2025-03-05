@@ -18,7 +18,7 @@
 
 默认情况下，此时论坛右上角会显示“执行中”的字样，表示程序正在运行，此过程会持续数秒。
 
-![image](https://pub4.oss-cn-beijing.aliyuncs.com/gf2-bbs-claimer/images/6A6AA36260B4B8EA423FF0B179601A33.png)
+![image](./images/6A6AA36260B4B8EA423FF0B179601A33.png)
 
 *图1 脚本执行中通知*
 
@@ -26,17 +26,17 @@
 
 在相同的位置，出现“执行完成”字样的通知，表示程序执行完成，并将结果缓存于浏览器，直至下一天。
 
-![image](https://pub4.oss-cn-beijing.aliyuncs.com/gf2-bbs-claimer/images/CBB10DB9D72BF383692A5F65303BD967.png)
+![image](./images/CBB10DB9D72BF383692A5F65303BD967.png)
 
 *图2 脚本执行完成后通知*
 
 随后在游戏内领取物件。
 
-![image](https://pub4.oss-cn-beijing.aliyuncs.com/gf2-bbs-claimer/images/24FA9D8C8B948DD4729EFCAEA5B8C148.jpg)
+![image](./images/24FA9D8C8B948DD4729EFCAEA5B8C148.jpg)
 
 *图3 兑换成功-1*
 
-![image](https://pub4.oss-cn-beijing.aliyuncs.com/gf2-bbs-claimer/images/0993685B6B00F749BCD8CA60989BC3A9.jpg)
+![image](./images/0993685B6B00F749BCD8CA60989BC3A9.jpg)
 
 *图4 兑换成功-2*
 
@@ -75,17 +75,17 @@
 
 #### 2.1 在右上角点击“拓展程序”，找到“篡改猴”，并点击
 
-![image](https://pub4.oss-cn-beijing.aliyuncs.com/gf2-bbs-claimer/images/4C68A4C90B5E8363D3F5B64FF11142C2.png)
+![image](./images/4C68A4C90B5E8363D3F5B64FF11142C2.png)
 
 *图1 点击“篡改猴”*
 
-![image](https://pub4.oss-cn-beijing.aliyuncs.com/gf2-bbs-claimer/images/0E42107121FE5FDA30DF31FF5A48C0FE.png)
+![image](./images/0E42107121FE5FDA30DF31FF5A48C0FE.png)
 
 *图2 点击“管理面板”*
 
 #### 2.2 找到本脚本，点击编辑
 
-![image](https://pub4.oss-cn-beijing.aliyuncs.com/gf2-bbs-claimer/images/B35D60B6D3BEA8BBDC617DC73944F123.png)
+![image](./images/B35D60B6D3BEA8BBDC617DC73944F123.png)
 
 *图3 编辑脚本*
 
@@ -128,13 +128,13 @@
 
 #### 3.1 在浏览器输入：chrome://extensions/
 
-![image](https://pub4.oss-cn-beijing.aliyuncs.com/gf2-bbs-claimer/images/3B7B1727C36341E6143498AFFE3F1F26.png)
+![image](./images/3B7B1727C36341E6143498AFFE3F1F26.png)
 
 *图4 打开拓展程序管理面板*
 
 #### 3.2 找到油猴插件，并点击“详情”
 
-![image](https://pub4.oss-cn-beijing.aliyuncs.com/gf2-bbs-claimer/images/0192D19DA6DE6DAF630D0556D01B1AF0.png)
+![image](./images/0192D19DA6DE6DAF630D0556D01B1AF0.png)
 
 *图5 油猴插件*
 
@@ -142,7 +142,7 @@
 
 > 未启用时为灰色
 
-![image](https://pub4.oss-cn-beijing.aliyuncs.com/gf2-bbs-claimer/images/4E7129E3A62AECF6F51424FB2D081562.png)
+![image](./images/4E7129E3A62AECF6F51424FB2D081562.png)
 
 *图6 允许油猴插件访问文件网址*
 
