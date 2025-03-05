@@ -6,43 +6,45 @@
 
 该脚本基于论坛的api进行开发，但已经将执行流程调整至比较接近人类的行为，所以理论上不会对服务器的正常运行造成影响。
 
-在安装了脚本，并为之配置环境后，打开论坛时，脚本会自动执行，频率为每日一次（指的是主要逻辑），其基本流程为：
+在安装了脚本，并为之配置环境后，打开论坛时，脚本会自动执行，频率为每日一次（指的是主要逻辑），**共分为两个阶段**：
 
-1、“做任务”
+**1、执行中**
+
+该阶段会执行以下事件：
 
 - 签到
 - 论坛每日(点赞、浏览、分享)
 - 兑换物品
 
-默认情况下，此时论坛右上角会显示“执行中”的字样，表示程序正在运行。
+默认情况下，此时论坛右上角会显示“执行中”的字样，表示程序正在运行，此过程会持续数秒。
 
-![image](./images/6A6AA36260B4B8EA423FF0B179601A33.png)
+![image](https://pub4.oss-cn-beijing.aliyuncs.com/gf2-bbs-claimer/images/6A6AA36260B4B8EA423FF0B179601A33.png)
 
-*图1 执行中*
+*图1 脚本执行中通知*
 
-2、“完成任务”
+**2、执行完成**
 
-等待数秒后，在相同的位置，出现“执行完成”字样，表示程序执行完成，且将结果缓存于浏览器，直至下一天。
+在相同的位置，出现“执行完成”字样的通知，表示程序执行完成，并将结果缓存于浏览器，直至下一天。
 
-![image](./images/CBB10DB9D72BF383692A5F65303BD967.png)
+![image](https://pub4.oss-cn-beijing.aliyuncs.com/gf2-bbs-claimer/images/CBB10DB9D72BF383692A5F65303BD967.png)
 
-*图2 执行完成*
+*图2 脚本执行完成后通知*
 
-随后在游戏内领取。
+随后在游戏内领取物件。
 
-![image](./images/24FA9D8C8B948DD4729EFCAEA5B8C148.jpg)
+![image](https://pub4.oss-cn-beijing.aliyuncs.com/gf2-bbs-claimer/images/24FA9D8C8B948DD4729EFCAEA5B8C148.jpg)
 
 *图3 兑换成功-1*
 
-![image](./images/0993685B6B00F749BCD8CA60989BC3A9.jpg)
+![image](https://pub4.oss-cn-beijing.aliyuncs.com/gf2-bbs-claimer/images/0993685B6B00F749BCD8CA60989BC3A9.jpg)
 
 *图4 兑换成功-2*
 
-## 一、在使用脚本之前...
+## 一、在使用脚本之前(重要)...
 
 有一点要提前告知的事项。
 
-该脚本的运行需要一个额外的配置文件：**该配置具有包括论坛账号&密码在内的数据(请放心，仅限于本地读取)**，因此需要做些许改动，请按照后续章节进行操作。
+该脚本的可协同一个额外的配置文件运行：**该配置具有包括论坛账号&密码在内的数据(请放心，仅限于本地读取)**，因此需要做些许改动，若能提供的话，请按照后续章节进行操作；若不想或懒得提供的话，后面就不用看了，直接安装使用即可。但作为代替的是，当凭证过期时，由于没有账号信息，本程序无法自动完成登录，需要自己手动进行。
 
 ## 二、配置脚本运行环境
 
@@ -54,12 +56,10 @@
 
 ```json
 {
-    "script_name": "少前2bbs自动兑换物品脚本",
     "account": "你的账号",
     "password": "你的密码",
     "exchanging": "1,2,3,4,5",
-    "notification": 1,
-    "base_url": "https://gf2-bbs-api.exiliumgf.com"
+    "notification": 1
 }
 ```
 
@@ -75,17 +75,17 @@
 
 #### 2.1 在右上角点击“拓展程序”，找到“篡改猴”，并点击
 
-![image](./images/4C68A4C90B5E8363D3F5B64FF11142C2.png)
+![image](https://pub4.oss-cn-beijing.aliyuncs.com/gf2-bbs-claimer/images/4C68A4C90B5E8363D3F5B64FF11142C2.png)
 
 *图1 点击“篡改猴”*
 
-![image](./images/0E42107121FE5FDA30DF31FF5A48C0FE.png)
+![image](https://pub4.oss-cn-beijing.aliyuncs.com/gf2-bbs-claimer/images/0E42107121FE5FDA30DF31FF5A48C0FE.png)
 
 *图2 点击“管理面板”*
 
 #### 2.2 找到本脚本，点击编辑
 
-![image](./images/B35D60B6D3BEA8BBDC617DC73944F123.png)
+![image](https://pub4.oss-cn-beijing.aliyuncs.com/gf2-bbs-claimer/images/B35D60B6D3BEA8BBDC617DC73944F123.png)
 
 *图3 编辑脚本*
 
@@ -99,7 +99,6 @@
 // @grant        GM_getResourceText
 // @resource     config http://your/path/to/config.json
 // @license      MIT
-略...
 // ==/UserScript==
 ```
 
@@ -114,7 +113,6 @@
 // @grant        GM_getResourceText
 // @resource     config file:///D:/xxx/MyApp.localized/gf2-bbs-claimer/config.json
 // @license      MIT
-略...
 // ==/UserScript==
 ```
 
@@ -130,13 +128,13 @@
 
 #### 3.1 在浏览器输入：chrome://extensions/
 
-![image](./images/3B7B1727C36341E6143498AFFE3F1F26.png)
+![image](https://pub4.oss-cn-beijing.aliyuncs.com/gf2-bbs-claimer/images/3B7B1727C36341E6143498AFFE3F1F26.png)
 
 *图4 打开拓展程序管理面板*
 
 #### 3.2 找到油猴插件，并点击“详情”
 
-![image](./images/0192D19DA6DE6DAF630D0556D01B1AF0.png)
+![image](https://pub4.oss-cn-beijing.aliyuncs.com/gf2-bbs-claimer/images/0192D19DA6DE6DAF630D0556D01B1AF0.png)
 
 *图5 油猴插件*
 
@@ -144,10 +142,12 @@
 
 > 未启用时为灰色
 
-![image](./images/4E7129E3A62AECF6F51424FB2D081562.png)
+![image](https://pub4.oss-cn-beijing.aliyuncs.com/gf2-bbs-claimer/images/4E7129E3A62AECF6F51424FB2D081562.png)
 
 *图6 允许油猴插件访问文件网址*
 
 ***
 
-前置工作已经全部完成💊，脚本应该可以正常运行了🎉🎉。
+至此，前置工作已经全部完成💊，脚本应该可以正常运行了🎉🎉。
+
+如果觉得还不错的话，可以分享给需要的人，或者有什么问题和建议时，尽管呼我。
