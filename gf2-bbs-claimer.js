@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         少前2bbs自动兑换物品脚本
 // @namespace    http://tampermonkey.net/
-// @version      1.0.8
+// @version      1.0.1
 // @description  一个简单的少前2论坛自动兑换物品脚本(包括签到)；当因登录凭证过期时，可根据提供的账号密码自动登录；其中，GM_getResourceText()需要启用油猴插件"允许访问文件网址"权限(具体配置请查看文档)，以chrome为例，浏览器右上角"更多设置(三点)" -> "拓展程序" -> "管理拓展程序" -> "篡改猴" -> "详情" -> "允许访问文件网址" -> 启用；
 // @author       virtual___nova@outlook.com
 // @match        https://gf2-bbs.exiliumgf.com/*
@@ -13,6 +13,15 @@
 
 (function() {
     'use strict';
+    const SCRIPT_NAME = GM_info.script.name;
+    log(`${SCRIPT_NAME}执行中...`);
+    const states = {};
+    const PERFORMED = "performed", SIGNED = "signed", EXCHANGED = "exchanged";
+    if ((states[SIGNED] = getKey(SIGNED)) && (states[PERFORMED] = getKey(PERFORMED)) && (states[EXCHANGED] = getKey(EXCHANGED))) {
+        log('今日已执行.');
+        return;
+    }
+    const TASK_1 = "点赞帖子", TASK_2 = "分享帖子", TASK_3 = "浏览帖子";
     const DEFAULT = {
         exchanging: '1,2,3,4,5',
         notification: 1,
@@ -23,12 +32,9 @@
     configPathNotEmpty && log('配置文件路径为空', 'warn');
     const _config = configPathNotEmpty ? GM_getResourceText('config') : '';
     const config = Object.assign({}, DEFAULT, _config ? JSON.parse(_config) : {});
-    const SCRIPT_NAME = GM_info.script.name;
     const BASE_URL = config.base_url, OK = "OK";
     const NOTIFICATION_STYLE = "position: fixed; z-index: 1000; padding: 0 10px; top: -60px; right: 0; height: 60px; display: flex; align-items: center; color: white; font-size: 14px; transition: all 0.2s";
     const SIGNED_IMG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFgAAABXCAMAAAC3HXLTAAADAFBMVEVHcEzg4ODg4ODg4OD////g4ODf39/////////////h4eHg4ODg4ODg4ODe3t7g4OD////g4ODh4eHg4ODg4ODf39/////h4eH////g4ODg4ODg4OD+/v7c3Nzh4eHh4eHg4ODm5ub////////////g4ODc3Nzh4eH////////i4uL////g4ODh4eHg4OD////h4eHg4OD+/v7////g4ODh4eHj4+Pe3t7g4ODg4ODd3d3////////h4eHg4OD////f39/k5OT////////////////////////////////////////l5eX////e3t7f39/k5OTg4ODh4eH////////////////////////h4eH////f39/z8/P////////f39/////f39/////f39/////////////g4OD////////////////f39/////////////////////////////////////////////////h4eH////////////////////////i4uL////////////i4uL////j4+Ps7Oz19fX////////////////////t7e3////l5eX////////m5ub////+/v7b29ve3t7g4ODY2Njd3d3c3Nz////g4ODl5eXd3d3m5ubh4eH8/Pz////g4OD///////////+rq6vg4OCkpKSqqqqlpaWoqKinp6f4+Pjf39+srKz+/v6mpqapqanj4+PU1NSurq6jo6Pm5ua0tLS1tbXz8/PIyMjMzMzi4uLs7OywsLDS0tL7+/v9/f3k5OTh4eHd3d3JycmysrKtra3u7u709PTe3t78/Pz6+vrPz8/V1dXv7+/BwcHX19f5+fnl5eXr6+uvr6/Dw8P39/ezs7Pn5+fR0dHLy8vx8fHc3Nzq6urt7e3o6OjZ2dm7u7vw8PDHx8fb29vT09PFxcWxsbH29vby8vK3t7fQ0NDa2tqhoaG9vb2+vr6fn5+2tra4uLjOzs7AwMD19fXGxsbExMTNzc3CwsK/v7/W1tZAfWO5AAAAp3RSTlMA7tbylvQYRtAyN/bZERsuJfDc8DkwCh/+6dA8RSvUKc8TB/oz2hYyAx80NB3dPu/z3kpf6+0PJubcLdqzFjF5GS9n8QTsE8WVECL2HQs28vLgO8Gbai/jyiFN0l7WGGoWc45AQAGuxiqTN4Yo5bhRXnhwqYXLbIFg9LFz3ijRMTX7nvVoaO9E+1iDPtyYSNj2ezrfVNMOt8sN2CTO6ugl+uTfu2yJPKs9jj4AAAc4SURBVFjDtZl3eBRFFMCPHgGV+AGiBBSCIOAHCAgqKAgiTYpIV4q999577x272G53ZneTyy65I4QkQkgul0snMY2SHGmEKr2p82Z29/Yul7C5W94ft29n53475c17b2dsNvPScdV1tjMhE7vy0T3ODJfno6+1nHsOcAl5kNXcS3gm7YZYy72K12TObAu5l/m5pM2dLePeaOTy/IjuVrX3cgb8sXNfpnSwhny+yr2gj+3sW1Rybyu5F5EbjdxlWNi8G0a+sOCDnjbbEiOXkC80kAd/+dmohde3Cjvro9fsRN54f8lNDHTlg+oTndz7pcVQxb4ophXcnsvsqrybybhj9WdjLqYl8XOHa3UmmQdPs+uSFh/I1cg5eXqV2MFmuf1nQv2qQvjNI01ePTbg8ZhVBFwCDzeuLYfLA2bBn0PtnS5XIlwz+NU/Bz3/ehWfA2/Nc7rkbHJdbBa8lFTOVTiuAsCp333fpMK339RvI482IU5qINeZd5120u6cMD4qKupF6CXmuHV0LH79IaqJfBWXq4KhV71ejoqa+vqobs1yHx/unzQd3IJoYE1unhF6yu42/ikcsH3y0lDgJ+wRg+2xQ5tyJ9En3oyc+PgMAziX3IeQnDQDODmTlPhg1O0fNl3hT5HihK0CEgTBYwDHuYRQ4koxgOMPkhLkoXbfpMmzYknpZsSBZBnBChdKxHwDOENghcVEfzoYfC+8rpTzgz1O557TgUUnV+AHu1KJ3j4YPABGgvODNWkJrIkKRiHBZwHYcYbBFYY/5TUD3hIO2FOQqMuW0GBc469TcEI0CeYk0S9caFH8dST13SbAJgXLSMJYFATFD749YrCCSsu2p8XlphfXZrizZFkFL2o/MiKwKKZkG52E9z+nQMFE5gcs61daBRa2xgV7pPT6/bzmPqcbwB+3Aiw6qzUrz/b50o4lsJtjxdpLli3XubPnamCMqBDTlJmGOYkpmoHIRSxCV7kbReRCSPIUpeaqyOKkzXD5TeN2brdGAzvXUNksCIlMy1LqmFKGGddNESUVSDdxjBwF6bQHWQoCv2dfybjdR/A6+C81n0CutUxbJ25gSgoFiSco4V8UMDpyGYB3lZIqB2EO/6TceR1402BcAYRtXOCCFGgzvQ7SJwRjEdsfuL278ObBQjLRaiUcwEV74fk2DNx9oP4B3GHANQuWwf+WY2bKOpcGvkK4R9tB3XUbgCnXD3ayoFYgy1uY1qjsZEoR4TlhIGrIG4RDDYmHVa+2A2DVMqjx1O4yeSDzgWDMghqpJjMNcyJTSItkYMSTeUP1ur9EOaD6BM1bkNhKeATcLggsU5GIj2MaATOFtFMkayDdqfXYbs8WVVgJGAnaRAtTCe53asMB4FJvMkgJQjxVvEliPi3yuhWuhtRag9jMU0l2VNKmA1eoZGW1OfwKam2vzjE7eRJM3QFOpuGj/qTuJ7ZTbpV6V575prruhrQzCXb5yEhgfNhOGy7XqSSaNch/g7qX1EhYoXuKQdHmwDDE2UiCGawkMOmfjVC+gXKpX0o8CGa80O/bekQHg7NdrkoNrOZnRxQnbSmdoz1gtWIS8Z5HCBdL1DtvQQo4kvcMXrPH2xrY4V4PckoUj1LF7cSHaZH7EIbwnSkoEPrTj4LdKp7krWBnYi1w8wUOF5HrW0ZH/45ubqoYNF2hYAKkXx7rgYgVEX620aEiBfgoURaEDk1OKh6MPUwjnWCKA8Mw8YjDWbtYx1WniXfDrZu+6DjRRoUEq2NcbRjjBqacVDBZ0FUwpA6K2kfJmEumHZCpA4H5iGkJHNIqEMlU42DWsEgnaxN03uGlH1kySwzJZ1qvla0GC5lwzzwwfVotKU46LGWymuoQg/zE1mowLoPlwBgok/rgJJjIhCJJ9aCw5ue3CCZ27Gtix5yDBOQ4FYIa9Mh/QOMi+GB9pJmEJYlKFsaNTONwKVOc6h9TVIzgVrk1GpdLIrfD+4eRCWHoah4XkAfE1eihxAWfPE+GlWIhGB+fS8tcHHWZdf64KkDomzI9vNytFFKTHXrsV2R/uJZOwcA8Gma2Ka23+z+vAlOAMki1xrf0cdPyYNAQt1YMyvQxYkY5LRg8A0oPYTNkat/lOwXRiN1TyEzkvmDwpVPAe+831WYa4+27UzxIEBUsyggX+TSbfrbJJ+/zNN40SqcXcf9xGjnsCYXxG9zr87dXbfSnyU03Le5XM14z4s1tbkNgaohthcfskctDITe0JvSKlDuumd2bAQ9PjoDaa9wzPZvfcesW08kvI79YS+WXWzsZJeYnVvxpQPHQ5eHuxGqi7cg+F8lebwhyP20PeV5ku93nqbvdfYK4Ee+na/vzoxm5X1/LTgC0k4rRV5ObgX0tPFnQzlbanGsb2NbSUxb1NIhvc4fKtexcaGLXgHMQC0+yAsiWnr11bKtz21h7WniNRiZTaDsTZMu5NmZqV1jPJW3uyxaJ9dLvnj7mK/8PU1+eK/hOV+QAAAAASUVORK5CYII=";
-    const PERFORMED = "performed", SIGNED = "signed", EXCHANGED = "exchanged";
-    const TASK_1 = "点赞帖子", TASK_2 = "分享帖子", TASK_3 = "浏览帖子";
     // 获取配置文件路径；
     function getConfigPath() {
         const pattern = /(@resource\s+)(.*?)\n/;
@@ -48,10 +54,21 @@
         if (!account || !password) {
             throw new Error("账号密码不能为空");
         }
+        const pattern = /^1[3456789]\d{9}$/;
+        let source;
+        if (pattern.test(account)) {
+            source = "phone";
+        }
+        else if (account.includes("@")) {
+            source = "email";
+        }
+        else {
+            throw new Error("账号格式错误");
+        }
         const resp = await fetch(`${BASE_URL}/login/account`, {
             method: "post",
             headers: { Authorization: token, "Content-Type": "application/json" },
-            body: JSON.stringify({ account_name: account, passwd: encrypt(password), source: "phone" })
+            body: JSON.stringify({ account_name: account, passwd: encrypt(password), source })
         });
         try {
             return (await resp.json()).data.account.token;
@@ -624,30 +641,26 @@
     };
     // ----------------------------------
     window.addEventListener('error', errorHandler);
-    log(`${SCRIPT_NAME}执行中...`);
-    const states = {};
-    if ((states[SIGNED] = getKey(SIGNED)) && (states[PERFORMED] = getKey(PERFORMED)) && (states[EXCHANGED] = getKey(EXCHANGED))) {
-        log('今日已执行.');
-        return;
-    }
     let token = localStorage.getItem('key');
     // 令牌不存在或过期时，进行登录；但若不提供配置时，则由用户自己进行
     if (token) {
         notice2(config);
         checkToken(token)
             .then(async valid => {
-                if (!valid && configPathNotEmpty) {
-                    token = await login(config.account, config.password);
-                    saveToken(token);
+                if (!valid) {
+                    if (configPathNotEmpty) {
+                        token = await login(config.account, config.password);
+                        saveToken(token);
+                    }
+                    else {
+                        notice('请先登录', 3000);
+                        log(`${SCRIPT_NAME}执行完成.`);
+                        return;
+                    }
                 }
-                if (configPathNotEmpty) {
-                    await runner(token, states);
-                    log(`${SCRIPT_NAME}执行完成.`);
-                    notice1(config);
-                }
-                else {
-                    notice('请先登录', 3000);
-                }
+                await runner(token, states);
+                log(`${SCRIPT_NAME}执行完成.`);
+                notice1(config);
             })
             .catch(errorHandler);
     }

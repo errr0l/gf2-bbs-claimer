@@ -2,15 +2,15 @@
 
 由于觉得少前2论坛的兑换物品功能比较繁琐，于是萌生了写个脚本以代替手工操作的想法，也就是本脚本的由来。
 
-原本只是想兑换体力，但后面发现完成每日任务所获取的积分足以换取所有物品之后，索性把其他物品也加上了，蚊子腿再小也是肉.jpg（笑）。
+原本只想做兑换体力（因为其他真的不够看），但后面发现完成论坛每日任务所获取的积分足以换取所有物品后，索性全部加上了，蚊子腿再小也是肉.jpg（笑）。
 
-该脚本基于论坛的api进行开发，但已经将执行流程调整至比较接近人类的行为，所以理论上不会对服务器的正常运行造成影响。
+该脚本基于论坛的api开发，但也已经将流程调整至比较接近人类的行为，所以理论上不会对服务器的正常运行造成影响。
 
-在安装了脚本，并为之配置环境后(可选)，打开论坛时，脚本会自动执行，频率为每日一次（指的是主要逻辑），**共分为两个阶段**：
+在安装了脚本，并为之配置环境后(可选)，打开论坛时，脚本会自动执行，频率为每日一次，**共分为两个阶段**：
 
 **1、执行中**
 
-该阶段会执行以下事件：
+该阶段会完成以下事件：
 
 - 签到
 - 论坛每日(点赞、浏览、分享)
@@ -18,7 +18,7 @@
 
 默认情况下，此时论坛右上角会显示“执行中”的字样，表示程序正在运行，此过程会持续数秒。
 
-![image](./images/6A6AA36260B4B8EA423FF0B179601A33.png)
+![image](https://cdn.jsdelivr.net/gh/virtua1nova/gf2-bbs-claimer/images/6A6AA36260B4B8EA423FF0B179601A33.png)
 
 *图1 脚本执行中通知*
 
@@ -26,17 +26,17 @@
 
 在相同的位置，出现“执行完成”字样的通知，表示程序执行完成，并将结果缓存于浏览器，直至下一天。
 
-![image](./images/CBB10DB9D72BF383692A5F65303BD967.png)
+![image](https://cdn.jsdelivr.net/gh/virtua1nova/gf2-bbs-claimer/images/CBB10DB9D72BF383692A5F65303BD967.png)
 
 *图2 脚本执行完成后通知*
 
 随后在游戏内领取物件。
 
-![image](./images/24FA9D8C8B948DD4729EFCAEA5B8C148.jpg)
+![image](https://cdn.jsdelivr.net/gh/virtua1nova/gf2-bbs-claimer/images/24FA9D8C8B948DD4729EFCAEA5B8C148.jpg)
 
 *图3 兑换成功-1*
 
-![image](./images/0993685B6B00F749BCD8CA60989BC3A9.jpg)
+![image](https://cdn.jsdelivr.net/gh/virtua1nova/gf2-bbs-claimer/images/0993685B6B00F749BCD8CA60989BC3A9.jpg)
 
 *图4 兑换成功-2*
 
@@ -75,17 +75,17 @@
 
 #### 2.1 在右上角点击“拓展程序”，找到“篡改猴”，并点击
 
-![image](./images/4C68A4C90B5E8363D3F5B64FF11142C2.png)
+![image](https://cdn.jsdelivr.net/gh/virtua1nova/gf2-bbs-claimer/images/4C68A4C90B5E8363D3F5B64FF11142C2.png)
 
 *图1 点击“篡改猴”*
 
-![image](./images/0E42107121FE5FDA30DF31FF5A48C0FE.png)
+![image](https://cdn.jsdelivr.net/gh/virtua1nova/gf2-bbs-claimer/images/0E42107121FE5FDA30DF31FF5A48C0FE.png)
 
 *图2 点击“管理面板”*
 
 #### 2.2 找到本脚本，点击编辑
 
-![image](./images/B35D60B6D3BEA8BBDC617DC73944F123.png)
+![image](https://cdn.jsdelivr.net/gh/virtua1nova/gf2-bbs-claimer/images/B35D60B6D3BEA8BBDC617DC73944F123.png)
 
 *图3 编辑脚本*
 
@@ -128,13 +128,13 @@
 
 #### 3.1 在浏览器输入：chrome://extensions/
 
-![image](./images/3B7B1727C36341E6143498AFFE3F1F26.png)
+![image](https://cdn.jsdelivr.net/gh/virtua1nova/gf2-bbs-claimer/images/3B7B1727C36341E6143498AFFE3F1F26.png)
 
 *图4 打开拓展程序管理面板*
 
 #### 3.2 找到油猴插件，并点击“详情”
 
-![image](./images/0192D19DA6DE6DAF630D0556D01B1AF0.png)
+![image](https://cdn.jsdelivr.net/gh/virtua1nova/gf2-bbs-claimer/images/0192D19DA6DE6DAF630D0556D01B1AF0.png)
 
 *图5 油猴插件*
 
@@ -142,7 +142,7 @@
 
 > 未启用时为灰色
 
-![image](./images/4E7129E3A62AECF6F51424FB2D081562.png)
+![image](https://cdn.jsdelivr.net/gh/virtua1nova/gf2-bbs-claimer/images/4E7129E3A62AECF6F51424FB2D081562.png)
 
 *图6 允许油猴插件访问文件网址*
 
