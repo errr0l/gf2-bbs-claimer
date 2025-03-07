@@ -7,6 +7,7 @@
 // @match        https://gf2-bbs.exiliumgf.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=exiliumgf.com
 // @grant        GM_getResourceText
+// @grant        window.onurlchange
 // @resource     config http://your/path/to/config.json
 // @license      MIT
 // ==/UserScript==
@@ -14,7 +15,7 @@
 (function() {
     'use strict';
     const SCRIPT_NAME = GM_info.script.name;
-    log(`${SCRIPT_NAME}执行中...`);
+    log(`开始执行${SCRIPT_NAME}...`);
     const states = {};
     const PERFORMED = "performed", SIGNED = "signed", EXCHANGED = "exchanged";
     if ((states[SIGNED] = getKey(SIGNED)) && (states[PERFORMED] = getKey(PERFORMED)) && (states[EXCHANGED] = getKey(EXCHANGED))) {
@@ -95,9 +96,9 @@
     async function signIn(token, _signed) {
         log(signIn.name);
         // 一共两次判断，一次为本地判断，另一次为从服务器获取数据判断，兑换和执行每日任务同理
-        if (_signed || (await signed(token) && setKey(SIGNED))) {
+        if (_signed || (await signed(token))) {
             console.log('今日已签到');
-            return null;
+            return { [SIGNED]: setKey(SIGNED) };
         }
         let resp = await fetch(`${BASE_URL}/community/task/sign_in`, {
             method: "post",
@@ -639,9 +640,36 @@
         return s = be(o) + be(a) + be(n) + be(i),
         s
     };
+    function getToken() {
+        return localStorage.getItem('key') || "";
+    }
+    // 等待登录；
+    // 通过监听url的变化，当检测到从/login路径跳转时，尝试获取令牌进行判断（不提供账号密码时才会调用该方法）
+    function waitingForLogin() {
+        log(waitingForLogin.name, 'warn');
+        let previous = location.href;
+        const handler = (ev) => {
+            if (previous.endsWith('login')) {
+                const token = getToken();
+                if (token) {
+                    log(`检测到用户已经登录，开始执行${SCRIPT_NAME}...`);
+                    runner(token, {})
+                        .then(() => {
+                            log(`${SCRIPT_NAME}执行完成.`);
+                        })
+                        .catch(errorHandler);
+                    window.removeEventListener('urlchange', handler);
+                }
+            }
+            previous = ev.url;
+        };
+        if (window.onurlchange === null) {
+            window.addEventListener('urlchange', handler);
+        }
+    }
     // ----------------------------------
     window.addEventListener('error', errorHandler);
-    let token = localStorage.getItem('key');
+    let token = getToken();
     // 令牌不存在或过期时，进行登录；但若不提供配置时，则由用户自己进行
     if (token) {
         notice2(config);
@@ -677,5 +705,7 @@
     }
     else {
         log(`${SCRIPT_NAME}执行完成. 由于令牌已过期，且未提供配置文件，本次未执行任何有效动作.`, 'warn');
+        console.warn(`尝试等待用户登录...`);
+        waitingForLogin();
     }
 })();
