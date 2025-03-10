@@ -30,11 +30,13 @@
     };
     const configPath = getConfigPath();
     const configPathNotEmpty = configPath !== '';
-    configPathNotEmpty && log('配置文件路径为空', 'warn');
+    !configPathNotEmpty && log('配置文件路径为空', 'warn');
     const _config = configPathNotEmpty ? GM_getResourceText('config') : '';
     const config = Object.assign({}, DEFAULT, _config ? JSON.parse(_config) : {});
     const BASE_URL = config.base_url, OK = "OK";
-    const NOTIFICATION_STYLE = "position: fixed; z-index: 1000; padding: 0 10px; top: -60px; right: 0; height: 60px; display: flex; align-items: center; color: white; font-size: 14px; transition: all 0.2s";
+    const NOTIFICATION_STYLE = "position: absolute; z-index: 1000; padding: 0 10px; display: flex; align-items: center; color: white; transition: all 0.2s;";
+    const NOTIFICATION_STYLE_FOR_PC = "right: 0; font-size: .12rem;";
+    const NOTIFICATION_STYLE_FOR_PHONE = "left: 0; font-size: .13rem;";
     const SIGNED_IMG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFgAAABXCAMAAAC3HXLTAAADAFBMVEVHcEzg4ODg4ODg4OD////g4ODf39/////////////h4eHg4ODg4ODg4ODe3t7g4OD////g4ODh4eHg4ODg4ODf39/////h4eH////g4ODg4ODg4OD+/v7c3Nzh4eHh4eHg4ODm5ub////////////g4ODc3Nzh4eH////////i4uL////g4ODh4eHg4OD////h4eHg4OD+/v7////g4ODh4eHj4+Pe3t7g4ODg4ODd3d3////////h4eHg4OD////f39/k5OT////////////////////////////////////////l5eX////e3t7f39/k5OTg4ODh4eH////////////////////////h4eH////f39/z8/P////////f39/////f39/////f39/////////////g4OD////////////////f39/////////////////////////////////////////////////h4eH////////////////////////i4uL////////////i4uL////j4+Ps7Oz19fX////////////////////t7e3////l5eX////////m5ub////+/v7b29ve3t7g4ODY2Njd3d3c3Nz////g4ODl5eXd3d3m5ubh4eH8/Pz////g4OD///////////+rq6vg4OCkpKSqqqqlpaWoqKinp6f4+Pjf39+srKz+/v6mpqapqanj4+PU1NSurq6jo6Pm5ua0tLS1tbXz8/PIyMjMzMzi4uLs7OywsLDS0tL7+/v9/f3k5OTh4eHd3d3JycmysrKtra3u7u709PTe3t78/Pz6+vrPz8/V1dXv7+/BwcHX19f5+fnl5eXr6+uvr6/Dw8P39/ezs7Pn5+fR0dHLy8vx8fHc3Nzq6urt7e3o6OjZ2dm7u7vw8PDHx8fb29vT09PFxcWxsbH29vby8vK3t7fQ0NDa2tqhoaG9vb2+vr6fn5+2tra4uLjOzs7AwMD19fXGxsbExMTNzc3CwsK/v7/W1tZAfWO5AAAAp3RSTlMA7tbylvQYRtAyN/bZERsuJfDc8DkwCh/+6dA8RSvUKc8TB/oz2hYyAx80NB3dPu/z3kpf6+0PJubcLdqzFjF5GS9n8QTsE8WVECL2HQs2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";
     // 获取配置文件路径；
     function getConfigPath() {
@@ -228,7 +230,7 @@
         return "";
     }
     function setKey(key) {
-        document.cookie = `${key}=1; max-age=${getSecondsBeforeDawn()}`;
+        document.cookie = `${key}=1; max-age=${getSecondsBeforeDawn()}; path=/;`;
         return 1;
     }
     // 执行每日任务
@@ -271,12 +273,13 @@
     }
     // 更新节点(签到成功后)；pc貌似有点问题，即使刷新页面，文字也依旧不变；
     function updateNodeForSigning() {
-        const btn = document.querySelector('.btns .btn');
-        const [img, span, i] = [...btn.children];
+        const selector = location.pathname.startsWith("/m") ? '.nav_con div:first-child' : '.btns .btn';
+        const node = document.querySelector(selector);
+        const [img, a, b] = [...node.children];
         if (img.src !== SIGNED_IMG) {
             img.src = SIGNED_IMG;
-            span.innerText = "已签到";
-            i.remove();
+            a.innerText = "已签到";
+            b.remove();
         }
     }
     async function runner(token, states) {
@@ -337,9 +340,10 @@
         _node && await removeNotification(_node, 1000);
         const node = document.createElement("div");
         _node = node;
-        node.style = NOTIFICATION_STYLE;
+        const head = document.querySelector('.head');
+        node.style = `${NOTIFICATION_STYLE}${location.pathname.startsWith("/m") ? NOTIFICATION_STYLE_FOR_PHONE : NOTIFICATION_STYLE_FOR_PC}top: -${head.clientHeight}px; height: ${head.clientHeight}px;`;
         node.innerText = message;
-        document.body.appendChild(node);
+        head.appendChild(node);
         if (duration > 0) {
             promise = new Promise(resolve => {
                 setTimeout(() => {
@@ -644,28 +648,29 @@
         return localStorage.getItem('key') || "";
     }
     // 等待登录；
-    // 通过监听url的变化，当检测到从/login路径跳转时，尝试获取令牌进行判断（不提供账号密码时才会调用该方法）
+    // 通过监听url的变化，当检测到从/login、/loading路径跳转时，尝试获取令牌进行判断（不提供账号密码时才会调用该方法）
     function waitingForLogin() {
         log(waitingForLogin.name, 'warn');
         let previous = location.href;
         const handler = (ev) => {
-            if (previous.endsWith('login')) {
+            if (previous.includes(ev.url)) {
+                return;
+            }
+            if (previous.endsWith('login') || previous.includes('/loading')) {
                 const token = getToken();
                 if (token) {
                     log(`检测到用户已经登录，开始执行${SCRIPT_NAME}...`);
                     runner(token, {})
                         .then(() => {
                             log(`${SCRIPT_NAME}执行完成.`);
+                            window.removeEventListener('urlchange', handler);
                         })
                         .catch(errorHandler);
-                    window.removeEventListener('urlchange', handler);
                 }
             }
             previous = ev.url;
         };
-        if (window.onurlchange === null) {
-            window.addEventListener('urlchange', handler);
-        }
+        window.addEventListener('urlchange', handler);
     }
     // ----------------------------------
     window.addEventListener('error', errorHandler);
@@ -704,8 +709,8 @@
             .catch(errorHandler);
     }
     else {
-        log(`${SCRIPT_NAME}执行完成. 由于令牌已过期，且未提供配置文件，本次未执行任何有效动作.`, 'warn');
-        console.warn(`尝试等待用户登录...`);
+        log(`${SCRIPT_NAME}执行完成. 由于令牌已过期，且未提供配置文件，或当前为移动端环境，本次未执行任何有效动作.`, 'warn');
+        console.warn(`尝试等待登录...`);
         waitingForLogin();
     }
 })();
