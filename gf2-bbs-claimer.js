@@ -126,10 +126,10 @@
         for(const item of posts) {
             const topicId = item.topic_id;
             resps.push(await like(token, topicId));
-            await delay(1000);
+            await delay(600);
             if (item.is_like) {
                 resps.push(await like(token, topicId));
-                await delay(1000);
+                await delay(600);
             }
         }
         return resps;
@@ -151,7 +151,7 @@
                 headers: { Authorization: token, "Content-Type": "application/json" }
             });
             resps.push(await resp.json());
-            await delay(1000);
+            await delay(600);
         }
         return resps;
     }
@@ -188,7 +188,7 @@
                 item.exchange_count++;
                 score -= item.use_score;
                 result[id] = await resp.json();
-                await delay(1000);
+                await delay(600);
             }
         }
         Object.values(result).every(successful) && setKey(EXCHANGED);
@@ -653,16 +653,18 @@
         log(waitingForLogin.name, 'warn');
         let previous = location.href;
         const handler = (ev) => {
-            if (previous.includes(ev.url)) {
+            if (previous === ev.url) {
                 return;
             }
             if (previous.endsWith('login') || previous.includes('/loading')) {
                 const token = getToken();
                 if (token) {
-                    log(`检测到用户已经登录，开始执行${SCRIPT_NAME}...`);
+                    log(`检测到已经登录，开始执行${SCRIPT_NAME}...`);
+                    notice2(config);
                     runner(token, {})
                         .then(() => {
                             log(`${SCRIPT_NAME}执行完成.`);
+                            notice1(config);
                             window.removeEventListener('urlchange', handler);
                         })
                         .catch(errorHandler);
@@ -674,9 +676,13 @@
     }
     // ----------------------------------
     window.addEventListener('error', errorHandler);
-    let token = getToken();
+    let token;
+    if (location.pathname.includes("/loading") && location.search.includes("token=")) {
+        console.warn(`等待登录完成...`);
+        waitingForLogin();
+    }
     // 令牌不存在或过期时，进行登录；但若不提供配置时，则由用户自己进行
-    if (token) {
+    else if ((token = getToken())) {
         notice2(config);
         checkToken(token)
             .then(async valid => {
@@ -709,7 +715,7 @@
             .catch(errorHandler);
     }
     else {
-        log(`${SCRIPT_NAME}执行完成. 由于令牌已过期，且未提供配置文件，或当前为移动端环境，本次未执行任何有效动作.`, 'warn');
+        log(`由于令牌已过期，且未提供配置文件，或当前为移动端环境，本次未执行任何有效动作.`, 'warn');
         console.warn(`尝试等待登录...`);
         waitingForLogin();
     }
