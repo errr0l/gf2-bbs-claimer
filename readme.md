@@ -46,11 +46,11 @@
 
 > 现在本脚本已经可以在移动端上运行，时机为：从游戏内点开论坛，等待登录完成后
 
-![image](https://cdn.jsdelivr.net/gh/virtua1nova/gf2-bbs-claimer/images/657FC646B533F46C59ECF07BD30570BB.jpg)
+![image](https://cdn.jsdelivr.net/gh/virtua1nova/gf2-bbs-claimer/images/F17B0F02A8CD5462C4D41820B6ECBF9B.jpg)
 
 *图5 移动端适配-1*
 
-![image](https://cdn.jsdelivr.net/gh/virtua1nova/gf2-bbs-claimer/images/54122C5AB7D2963B10E8C45DF9231888.jpg)
+![image](https://cdn.jsdelivr.net/gh/virtua1nova/gf2-bbs-claimer/images/26D4BC4755F4E7D8AF2C424C8B1A5CA7.jpg)
 
 *图6 移动端适配-2*
 
