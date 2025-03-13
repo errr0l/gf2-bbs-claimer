@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         少前2bbs自动兑换物品脚本
 // @namespace    http://tampermonkey.net/
-// @version      1.0.1
+// @version      1.1.0
 // @description  一个简单的少前2论坛自动兑换物品脚本(包括签到)；当因登录凭证过期时，可根据提供的账号密码自动登录；其中，GM_getResourceText()需要启用油猴插件"允许访问文件网址"权限(具体配置请查看文档)，以chrome为例，浏览器右上角"更多设置(三点)" -> "拓展程序" -> "管理拓展程序" -> "篡改猴" -> "详情" -> "允许访问文件网址" -> 启用；
 // @author       virtual___nova@outlook.com
 // @match        https://gf2-bbs.exiliumgf.com/*
@@ -73,11 +73,7 @@
             headers: { Authorization: token, "Content-Type": "application/json" },
             body: JSON.stringify({ account_name: account, passwd: encrypt(password), source })
         });
-        try {
-            return (await resp.json()).data.account.token;
-        } catch (e) {
-            throw e;
-        }
+        return (await resp.json()).data.account.token;
     }
     // 获取现在到凌晨的秒数，作为cookie的有效期；
     function getSecondsBeforeDawn() {

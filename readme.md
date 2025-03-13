@@ -40,6 +40,20 @@
 
 *图4 兑换成功-2*
 
+## 更新记录
+
+1、新增了移动端适配（202503）
+
+> 现在本脚本已经可以在移动端上运行，时机为：从游戏内点开论坛，等待登录完成后
+
+![image](https://cdn.jsdelivr.net/gh/virtua1nova/gf2-bbs-claimer/images/657FC646B533F46C59ECF07BD30570BB.jpg)
+
+*图5 移动端适配-1*
+
+![image](https://cdn.jsdelivr.net/gh/virtua1nova/gf2-bbs-claimer/images/54122C5AB7D2963B10E8C45DF9231888.jpg)
+
+*图6 移动端适配-2*
+
 ## 一、在使用脚本之前(重要)...
 
 有一点要提前告知的事项。
@@ -77,17 +91,17 @@
 
 ![image](https://cdn.jsdelivr.net/gh/virtua1nova/gf2-bbs-claimer/images/4C68A4C90B5E8363D3F5B64FF11142C2.png)
 
-*图1 点击“篡改猴”*
+*图2-1 点击“篡改猴”*
 
 ![image](https://cdn.jsdelivr.net/gh/virtua1nova/gf2-bbs-claimer/images/0E42107121FE5FDA30DF31FF5A48C0FE.png)
 
-*图2 点击“管理面板”*
+*图2-2 点击“管理面板”*
 
 #### 2.2 找到本脚本，点击编辑
 
 ![image](https://cdn.jsdelivr.net/gh/virtua1nova/gf2-bbs-claimer/images/B35D60B6D3BEA8BBDC617DC73944F123.png)
 
-*图3 编辑脚本*
+*图2-3 编辑脚本*
 
 #### 2.3 修改配置文件路径
 
@@ -130,13 +144,13 @@
 
 ![image](https://cdn.jsdelivr.net/gh/virtua1nova/gf2-bbs-claimer/images/3B7B1727C36341E6143498AFFE3F1F26.png)
 
-*图4 打开拓展程序管理面板*
+*图2-4 打开拓展程序管理面板*
 
 #### 3.2 找到油猴插件，并点击“详情”
 
 ![image](https://cdn.jsdelivr.net/gh/virtua1nova/gf2-bbs-claimer/images/0192D19DA6DE6DAF630D0556D01B1AF0.png)
 
-*图5 油猴插件*
+*图2-5 油猴插件*
 
 #### 3.3 点击启用权限
 
@@ -144,7 +158,7 @@
 
 ![image](https://cdn.jsdelivr.net/gh/virtua1nova/gf2-bbs-claimer/images/4E7129E3A62AECF6F51424FB2D081562.png)
 
-*图6 允许油猴插件访问文件网址*
+*图2-6 允许油猴插件访问文件网址*
 
 ***
 
