@@ -64,18 +64,16 @@
 
 2）新增了服务器版本
 
-在服务器安装了nodejs的情况下，赋予fg2-bbs-claimer-for-server.sh（前往[仓库](https://github.com/virtua1nova/gf2-bbs-claimer)获取）执行权限后执行即可，推荐配合一些定时任务使用，crontab、pm2等。
+在服务器安装了nodejs的情况下，赋予gf2-bbs-claimer-for-server.sh（前往[仓库](https://github.com/virtua1nova/gf2-bbs-claimer)获取）执行权限后执行即可，推荐配合一些定时任务使用，crontab、pm2等。
+
+由于脚本中使用到fetch模块，所以node版本需要在18以上。
 
 以crontab为例：
 
 ```text
-# 将脚本下载后，赋予权限
-chmod +x fg2-bbs-claimer-for-server.sh
-
 # 打开编辑面板，添加定时任务，如每天凌晨和中午12点执行
 crontab -e
-
-# 将"0 0,12 * * * /your/path/to/fg2-bbs-claimer-for-server.sh >> /your/path/tofg2-bbs-claimer-for-server.log 2>&1"粘贴进去，并保存退出
+# 将"0 0,12 * * * /usr/local/bin/node /your/path/to/gf2-bbs-claimer-for-server.js >> /your/path/to/gf2-bbs-claimer-for-server.log 2>&1"粘贴进去，并保存退出
 ```
 
 **注意，服务器版本，必须提供配置文件。**

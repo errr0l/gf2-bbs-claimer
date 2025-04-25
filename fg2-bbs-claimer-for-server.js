@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 // ==UserScript==
 // @name         GF2 BBS Claimer
 // @name:zh-CN   少前2bbs自动兑换物品脚本
@@ -19,9 +17,6 @@
 const path = require('path');
 const fs = require('fs');
 
-const SCRIPT_NAME = GM_info.script.name;
-log(`开始执行${SCRIPT_NAME}...`);
-
 const PERFORMED = "performed", SIGNED = "signed", EXCHANGED = "exchanged";
 const TASK_1 = "点赞帖子", TASK_2 = "分享帖子", TASK_3 = "浏览帖子";
 const DEFAULT = {
@@ -31,6 +26,9 @@ const DEFAULT = {
 const configPath = path.resolve(__dirname, './config.json');
 const _config = getConfig(configPath);
 const config = Object.assign({}, DEFAULT, _config);
+const SCRIPT_NAME = config.name || "少前2bbs自动兑换物品脚本";
+log(`开始执行${SCRIPT_NAME}...`);
+const BASE_URL = config.base_url, OK = "OK";
 // 获取配置；
 function getConfig(path) {
     const config = require(path);
