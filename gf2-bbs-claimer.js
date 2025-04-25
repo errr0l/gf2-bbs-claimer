@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         少前2bbs自动兑换物品脚本
 // @namespace    http://tampermonkey.net/
-// @version      1.1.0
+// @version      1.1.1
 // @description  一个简单的少前2论坛自动兑换物品脚本(包括签到)；当因登录凭证过期时，可根据提供的账号密码自动登录；其中，GM_getResourceText()需要启用油猴插件"允许访问文件网址"权限(具体配置请查看文档)，以chrome为例，浏览器右上角"更多设置(三点)" -> "拓展程序" -> "管理拓展程序" -> "篡改猴" -> "详情" -> "允许访问文件网址" -> 启用；
 // @author       virtual___nova@outlook.com
 // @match        https://gf2-bbs.exiliumgf.com/*
@@ -24,7 +24,6 @@
     }
     const TASK_1 = "点赞帖子", TASK_2 = "分享帖子", TASK_3 = "浏览帖子";
     const DEFAULT = {
-        exchanging: '1,2,3,4,5',
         notification: 1,
         base_url: 'https://gf2-bbs-api.exiliumgf.com'
     };
@@ -157,17 +156,13 @@
     // - 积分足够时，将所有物品兑换完；
     // - 积分不足时，优先兑换1，其次是5234；
     // 但若每日都完成任务时，不会存在积分不足的问题。
-    async function exchange(token, exchanging, exchanged) {
+    async function exchange(token, exchanged) {
         log(exchange.name);
         if (exchanged) {
             console.log('今日已兑换');
             return null;
         }
-        const idMap = {};
         const result = {};
-        for (const item of exchanging.split(',')) {
-            idMap[item] = item;
-        }
         const [exchangeList, memberInfoResp] = await Promise.all([getExchangeList(token), getInfo(token)]);
         // 按exchange_id升序排序，并将信息核移至下标1位置
         exchangeList.sort((a, b) => a.exchange_id - b.exchange_id);
@@ -175,7 +170,7 @@
         let score = (await memberInfoResp.json()).data.user.score;
         for (const item of exchangeList) {
             const id = item.exchange_id;
-            while (idMap[id] && score >= item.use_score && (item.exchange_count < item.max_exchange_count)) {
+            while (score >= item.use_score && (item.exchange_count < item.max_exchange_count)) {
                 const resp = await fetch(`${BASE_URL}/community/item/exchange`, {
                     method: 'post',
                     headers: { Authorization: token, "Content-Type": "application/json" },
@@ -286,7 +281,7 @@
         }
         const resp2performTask = await performTask(token, states[PERFORMED]);
         resp2performTask && console.log(resp2performTask);
-        const resp2exchange = await exchange(token, config.exchanging, states[EXCHANGED]);
+        const resp2exchange = await exchange(token, states[EXCHANGED]);
         resp2exchange && console.log(resp2exchange);
     }
     // (md5)加密
