@@ -1,19 +1,3 @@
-// ==UserScript==
-// @name         GF2 BBS Claimer
-// @name:zh-CN   少前2bbs自动兑换物品脚本
-// @namespace    http://tampermonkey.net/
-// @version      1.1.1
-// @description  一个简单的少前2论坛自动兑换物品脚本(包括签到)；当因登录凭证过期时，可根据提供的账号密码自动登录；其中，GM_getResourceText()需要启用油猴插件"允许访问文件网址"权限(具体配置请查看文档)，以chrome为例，浏览器右上角"更多设置(三点)" -> "拓展程序" -> "管理拓展程序" -> "篡改猴" -> "详情" -> "允许访问文件网址" -> 启用；
-// @description:zh-CN  一个简单的少前2论坛自动兑换物品脚本(包括签到)；当因登录凭证过期时，可根据提供的账号密码自动登录；其中，GM_getResourceText()需要启用油猴插件"允许访问文件网址"权限(具体配置请查看文档)，以chrome为例，浏览器右上角"更多设置(三点)" -> "拓展程序" -> "管理拓展程序" -> "篡改猴" -> "详情" -> "允许访问文件网址" -> 启用；
-// @author       virtual___nova@outlook.com
-// @match        https://gf2-bbs.exiliumgf.com/*
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=exiliumgf.com
-// @grant        GM_getResourceText
-// @grant        window.onurlchange
-// @resource     config http://your/path/to/config.json
-// @license      MIT
-// ==/UserScript==
-
 const path = require('path');
 const fs = require('fs');
 
@@ -28,6 +12,11 @@ const _config = getConfig(configPath);
 const config = Object.assign({}, DEFAULT, _config);
 const SCRIPT_NAME = config.name || "少前2bbs自动兑换物品脚本";
 log(`开始执行${SCRIPT_NAME}...`);
+const states = {};
+if ((states[SIGNED] = getKey(SIGNED)) && (states[PERFORMED] = getKey(PERFORMED)) && (states[EXCHANGED] = getKey(EXCHANGED))) {
+    log('今日已执行.');
+    return;
+}
 const BASE_URL = config.base_url, OK = "OK";
 // 获取配置；
 function getConfig(path) {
@@ -57,11 +46,14 @@ async function login(account, password) {
     });
     return (await resp.json()).data.account.token;
 }
-// 获取现在到凌晨的秒数，作为cookie的有效期；
-// function getSecondsBeforeDawn() {
-//     const date = new Date();
-//     return (23 - date.getHours()) * 60 * 60 + (59 - date.getMinutes()) * 60 + 59 - date.getSeconds();
-// }
+// 获取现在到凌晨毫秒，作为config[key]的值，也为对应key的有效期；
+function getExpiration() {
+    const date = new Date();
+    const millseconds = date.getTime();
+    // return (23 - date.getHours()) * 60 * 60 + (59 - date.getMinutes()) * 60 + 59 - date.getSeconds();
+    date.setHours(24, 0, 0, 0);
+    return date.getTime() - millseconds;
+}
 // 是否已经签到
 async function signed(token) {
     const resp = await (await fetch(`${BASE_URL}/community/task/get_current_sign_in_status`, {
@@ -195,21 +187,28 @@ async function getTask(token) {
     })).json();
     return resp.data.daily_task;
 }
-// function getKey(key) {
-//     for (const item of document.cookie.split(";").map(item => item.trim())) {
-//         if (item.startsWith(key)) {
-//             return item.split("=")[1];
-//         }
-//     }
-//     return "";
-// }
+// 过期时，返回空值
+function getKey(key) {
+    const v = config[key];
+    if (v) {
+        if (Date.now < +v) {
+            return v;
+        }
+        config[v] = "";
+        saveConfig();
+        return config[v];
+    }
+    return "";
+}
 function setKey(key) {
     //document.cookie = `${key}=1; max-age=${getSecondsBeforeDawn()}; path=/;`;
-    if (!config[key]) {
-        config[key] = 1;
+    let value;
+    if (!(value = config[key])) {
+        value = getExpiration();
+        config[key] = value;
         saveConfig();
     }
-    return 1;
+    return value;
 }
 // 执行每日任务
 async function performTask(token, performed) {
@@ -249,17 +248,6 @@ async function performTask(token, performed) {
     [...a, ...b, c].every(successful) && setKey(PERFORMED);
     return results;
 }
-// 更新节点(签到成功后)；pc貌似有点问题，即使刷新页面，文字也依旧不变；
-// function updateNodeForSigning() {
-//     const selector = location.pathname.startsWith("/m") ? '.nav_con div:first-child' : '.btns .btn';
-//     const node = document.querySelector(selector);
-//     const [img, a, b] = [...node.children];
-//     if (img.src !== SIGNED_IMG) {
-//         img.src = SIGNED_IMG;
-//         a.innerText = "已签到";
-//         b.remove();
-//     }
-// }
 async function runner(token, states) {
     const resp2signIn = await signIn(token, states[SIGNED]);
     if (resp2signIn) {
@@ -300,6 +288,7 @@ function saveConfig() {
         log(str);
         fs.writeFileSync(configPath, str);
         clearTimeout(timer);
+        timer = null;
     }, 5000);
 }
 function saveToken(token) {
@@ -316,48 +305,6 @@ function errorHandler(ev) {
     console.warn("若未完成兑换时，请手动处理.");
     notice3(config);
 }
-// function removeNotification(node, delay) {
-//     return new Promise(resolve => {
-//         setTimeout(() => {
-//             node.style.top = "-60px";
-//             setTimeout(() => {
-//                 node.remove();
-//                 resolve();
-//             }, 50);
-//         }, delay);
-//     })
-// }
-// let _node, promise;
-// async function notice(message, duration, _delay=50) {
-//     promise && await promise;
-//     _node && await removeNotification(_node, 1000);
-//     const node = document.createElement("div");
-//     _node = node;
-//     const head = document.querySelector('.head');
-//     node.style = `${NOTIFICATION_STYLE}${location.pathname.startsWith("/m") ? NOTIFICATION_STYLE_FOR_PHONE : NOTIFICATION_STYLE_FOR_PC}top: -${head.clientHeight}px; height: ${head.clientHeight}px;`;
-//     node.innerText = message;
-//     head.appendChild(node);
-//     if (duration > 0) {
-//         promise = new Promise(resolve => {
-//             setTimeout(() => {
-//                 node.style.top = "0";
-//                 removeNotification(node, duration);
-//                 _node = null;
-//                 promise = null;
-//                 resolve();
-//             }, _delay);
-//         });
-//     }
-//     else {
-//         promise = new Promise(resolve => {
-//             setTimeout(() => {
-//                 node.style.top = "0";
-//                 promise = null;
-//                 resolve();
-//             }, _delay);
-//         });
-//     }
-// }
 function notice(message, duration, _delay=50) {
     log(message);
 }
@@ -643,35 +590,6 @@ const ke = function(t) {
 function getToken() {
     return config['token'];
 }
-// 等待登录；
-// 通过监听url的变化，当检测到从/login、/loading路径跳转时，尝试获取令牌进行判断（不提供账号密码时才会调用该方法）
-// function waitingForLogin() {
-//     log(waitingForLogin.name, 'warn');
-//     let previous = location.href;
-//     const handler = (ev) => {
-//         if (previous === ev.url) {
-//             return;
-//         }
-//         if (previous.endsWith('login') || previous.includes('/loading')) {
-//             const token = getToken();
-//             if (token) {
-//                 log(`检测到已经登录，开始执行${SCRIPT_NAME}...`);
-//                 notice2(config);
-//                 runner(token, {})
-//                     .then(() => {
-//                         log(`${SCRIPT_NAME}执行完成.`);
-//                         notice1(config);
-//                         window.removeEventListener('urlchange', handler);
-//                     })
-//                     .catch(errorHandler);
-//             }
-//         }
-//         previous = ev.url;
-//     };
-//     window.addEventListener('urlchange', handler);
-// }
-// ----------------------------------
-// window.addEventListener('error', errorHandler);
 process.on('uncaughtException', errorHandler);
 process.on('unhandledRejection', errorHandler);
 let token;
