@@ -11,17 +11,21 @@ const configPath = path.resolve(__dirname, './config.json');
 const _config = getConfig(configPath);
 const config = Object.assign({}, DEFAULT, _config);
 const SCRIPT_NAME = config.name || "少前2bbs自动兑换物品脚本";
+let timer;
 log(`开始执行${SCRIPT_NAME}...`);
-const states = {};
-if ((states[SIGNED] = getKey(SIGNED)) && (states[PERFORMED] = getKey(PERFORMED)) && (states[EXCHANGED] = getKey(EXCHANGED))) {
+const states = {
+    [SIGNED]: getKey(SIGNED),
+    [PERFORMED]: getKey(PERFORMED),
+    [EXCHANGED]: getKey(EXCHANGED)
+};
+if (states[SIGNED] && states[PERFORMED] && [EXCHANGED]) {
     log('今日已执行.');
     return;
 }
 const BASE_URL = config.base_url, OK = "OK";
 // 获取配置；
 function getConfig(path) {
-    const config = require(path);
-    return config;
+    return require(path);
 }
 // 账号登录；返回一个令牌
 async function login(account, password) {
@@ -194,9 +198,9 @@ function getKey(key) {
         if (Date.now < +v) {
             return v;
         }
-        config[v] = "";
+        config[key] = "";
         saveConfig();
-        return config[v];
+        return config[key];
     }
     return "";
 }
@@ -277,7 +281,6 @@ async function checkToken(token) {
     const resp = await getInfo(token);
     return resp.status === 200;
 }
-let timer;
 function saveConfig() {
     if (timer) {
         clearTimeout(timer);
@@ -601,7 +604,7 @@ if ((token = getToken())) {
                 token = await login(config.account, config.password);
                 saveToken(token);
             }
-            await runner(token, config);
+            await runner(token, states);
             log(`${SCRIPT_NAME}执行完成.`);
             notice1(config);
         })
@@ -612,7 +615,7 @@ else {
     login(config.account, config.password)
         .then(async token => {
             saveToken(token);
-            await runner(token, config);
+            await runner(token, states);
             log(`${SCRIPT_NAME}执行完成.`);
             notice1(config);
         })

@@ -76,7 +76,7 @@ crontab -e
 # 将"0 0,12 * * * /usr/local/bin/node /your/path/to/gf2-bbs-claimer-for-server.js >> /your/path/to/gf2-bbs-claimer-for-server.log 2>&1"粘贴进去，并保存退出
 ```
 
-**注意，服务器版本，必须提供配置文件。**
+**注意，服务器版本，必须提供配置文件，放在与脚本同一目录即可。**
 
 ## 一、在使用脚本之前(重要)...
 
