@@ -42,9 +42,9 @@
 
 ## 更新记录
 
-1、202503
+### 1、202503
 
-1）新增了移动端适配（202503）
+#### 1）新增了移动端适配（202503）
 
 > 现在本脚本已经可以在移动端上运行，时机为：从游戏内点开论坛，等待登录完成后
 
@@ -56,27 +56,35 @@
 
 *图6 移动端适配-2*
 
-2、202504
+### 2、202504
 
-1）删除了物品id配置项
+#### 1）删除了物品id配置项
 
 修改策略为积分足够时，兑换全部物品。
 
-2）新增了服务器版本
+#### 2）新增了服务器版本
 
-在服务器安装了nodejs的情况下，赋予gf2-bbs-claimer-for-server.sh（前往[仓库](https://github.com/virtua1nova/gf2-bbs-claimer)获取）执行权限后执行即可，推荐配合一些定时任务使用，crontab、pm2等。
+现已支持在服务器上运行。
 
-由于脚本中使用到fetch模块，所以node版本需要在18以上。
+在服务器安装了nodejs的情况下，前往[仓库](https://github.com/virtua1nova/gf2-bbs-claimer)获取gf2-bbs-claimer-for-server.js脚本，推荐配合一些定时任务使用，如crontab、pm2等。
+
+注：由于脚本中使用到fetch模块，所以node版本需要在18以上。
 
 以crontab为例：
 
 ```text
-# 打开编辑面板，添加定时任务，如每天凌晨和中午12点执行
+# 打开编辑面板，添加定时任务，如每天凌晨、中午12点10分执行（增加容错）
 crontab -e
-# 将"0 0,12 * * * /usr/local/bin/node /your/path/to/gf2-bbs-claimer-for-server.js >> /your/path/to/gf2-bbs-claimer-for-server.log 2>&1"粘贴进去，并保存退出
+# 将"10 0,12 * * * /usr/local/bin/node /your/path/to/gf2-bbs-claimer-for-server.js >> /your/path/to/gf2-bbs-claimer-for-server.log 2>&1"粘贴进去，并保存退出
 ```
 
 **注意，服务器版本，必须提供配置文件，放在与脚本同一目录即可。**
+
+### 3、202505
+
+#### 1）优化了判断令牌是否过期的逻辑
+
+由原本请求接口判断改为获取jwt的载荷数据进行判断
 
 ## 一、在使用脚本之前(重要)...
 

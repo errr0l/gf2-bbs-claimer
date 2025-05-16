@@ -25,7 +25,8 @@
     const TASK_1 = "点赞帖子", TASK_2 = "分享帖子", TASK_3 = "浏览帖子";
     const DEFAULT = {
         notification: 1,
-        base_url: 'https://gf2-bbs-api.exiliumgf.com'
+        base_url: 'https://gf2-bbs-api.exiliumgf.com',
+        threshold: 600, // 判断token是否过期阈值（单位秒）
     };
     const configPath = getConfigPath();
     const configPathNotEmpty = configPath !== '';
@@ -297,10 +298,13 @@
     }
     // 获取用户信息(其实是用于检查令牌是否有效)；
     // 测试发现，只要令牌未过期，都可获取到数据，即可存在多个令牌（服务器不记录状态）；
-    // 当response.status为401时，表示令牌过期。
+    // 当response.status为401时，表示令牌过期；
+    // 更新判断方式；
     async function checkToken(token) {
-        const resp = await getInfo(token);
-        return resp.status === 200;
+        // const resp = await getInfo(token);
+        // return resp.status === 200;
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        return (payload.exp - (Date.now() / 1000)) > config.threshold;
     }
     function saveToken(token) {
         localStorage.setItem('key', token);
