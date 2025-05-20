@@ -1,5 +1,6 @@
 {
     "account": "你的账号",
     "password": "你的密码",
-    "notification": 1
+    "notification": 1,
+    "threshold": 600
 }
