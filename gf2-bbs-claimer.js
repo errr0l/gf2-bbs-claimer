@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         少前2bbs自动兑换物品脚本
 // @namespace    http://tampermonkey.net/
-// @version      1.1.3
-// @description  一个简单的少前2论坛自动兑换物品脚本(包括签到)；当因登录凭证过期时，可根据提供的账号密码自动登录；其中，GM_getResourceText()需要启用油猴插件"允许访问文件网址"权限(具体配置请查看文档)，以chrome为例，浏览器右上角"更多设置(三点)" -> "拓展程序" -> "管理拓展程序" -> "篡改猴" -> "详情" -> "允许访问文件网址" -> 启用；
+// @version      1.1.5
+// @description  一个简单的少前2论坛自动兑换物品脚本(包括签到)；当因登录凭证过期时，可根据提供的账号密码自动登录(可选)；其中，若提供账号，则需要启用油猴插件"允许访问文件网址"权限，这是读取文件接口GM_getResourceText()的硬性要求，具体账号配置请查看文档。以chrome为例，浏览器右上角"更多设置(三点)" -> "拓展程序" -> "管理拓展程序" -> "篡改猴" -> "详情" -> "允许访问文件网址" -> 启用；此外，本脚本还提供了服务器版本，如有需要，可前往仓库(https://github.com/virtua1nova/gf2-bbs-claimer/blob/master/gf2-bbs-claimer-for-server.js)获取。
 // @author       virtual___nova@outlook.com
 // @match        https://gf2-bbs.exiliumgf.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=exiliumgf.com
@@ -27,6 +27,7 @@
         notification: 1,
         base_url: 'https://gf2-bbs-api.exiliumgf.com',
         threshold: 600, // 判断token是否过期阈值（单位秒）
+        network_delay: 600
     };
     const configPath = getConfigPath();
     const configPathNotEmpty = configPath !== '';
@@ -81,7 +82,7 @@
         const ms1 = date.getTime();
         // return (23 - date.getHours()) * 60 * 60 + (59 - date.getMinutes()) * 60 + 59 - date.getSeconds();
         const ms2 = date.setHours(24, 0, 0, 0);
-        return (ms2 - ms1) >> 0;
+        return ((ms2 - ms1) / 1000) >> 0;
     }
     // 是否已经签到
     async function signed(token) {
@@ -125,10 +126,10 @@
         for(const item of posts) {
             const topicId = item.topic_id;
             resps.push(await like(token, topicId));
-            await delay(600);
+            await delay(config.network_delay);
             if (item.is_like) {
                 resps.push(await like(token, topicId));
-                await delay(600);
+                await delay(config.network_delay);
             }
         }
         return resps;
@@ -150,7 +151,7 @@
                 headers: { Authorization: token, "Content-Type": "application/json" }
             });
             resps.push(await resp.json());
-            await delay(600);
+            await delay(config.network_delay);
         }
         return resps;
     }
@@ -170,7 +171,8 @@
         const [exchangeList, memberInfoResp] = await Promise.all([getExchangeList(token), getInfo(token)]);
         // 按exchange_id升序排序，并将信息核移至下标1位置
         exchangeList.sort((a, b) => a.exchange_id - b.exchange_id);
-        exchangeList.splice(1, 0, exchangeList.pop());
+        let item = exchangeList.pop();
+        exchangeList.splice(1, 0, item.exchange_id === 5 ? item : exchangeList.splice(4, 1)[0]);
         let score = (await memberInfoResp.json()).data.user.score;
         for (const item of exchangeList) {
             const id = item.exchange_id;
@@ -183,7 +185,7 @@
                 item.exchange_count++;
                 score -= item.use_score;
                 result[id] = await resp.json();
-                await delay(600);
+                await delay(config.network_delay);
             }
         }
         Object.values(result).every(successful) && setKey(EXCHANGED);
@@ -207,6 +209,11 @@
         });
         return (await resp.json()).data.list;
     }
+    /**
+     * 过滤已点赞帖子
+     * @param {*} list 
+     * @returns {Array}
+     */
     function notLikeFilter(list) {
         return list.filter(item => !item.is_like);
     }
@@ -251,9 +258,10 @@
         }
         const posts = await getPost(token);
         let filtered = notLikeFilter(posts);
-        // 如果没有符合条件的数据，则使用原始数据（但估计会很少遇到，毕竟是极端情况）
-        if (!filtered.length) {
-            filtered = posts;
+        // 如果没有或少于符合条件的数据，则使用原始数据填充（但估计会很少遇到，毕竟是极端情况）
+        if (filtered.length < 3) {
+            // filtered = posts;
+            filtered.push(...posts.slice(0, (3 - filtered.length)));
         }
         const _posts = filtered.slice(0, 3);
         pending[TASK_1] && (pending[TASK_1] = task1(token, _posts));

@@ -7,6 +7,7 @@ const DEFAULT = {
     notification: 1,
     base_url: 'https://gf2-bbs-api.exiliumgf.com',
     threshold: 600, // 判断token是否过期阈值（单位秒）
+    network_delay: 600
 };
 const configPath = path.resolve(__dirname, './config.json');
 const _config = getConfig(configPath);
@@ -101,10 +102,10 @@ async function task1(token, posts) {
     for(const item of posts) {
         const topicId = item.topic_id;
         resps.push(await like(token, topicId));
-        await delay(600);
+        await delay(config.network_delay);
         if (item.is_like) {
             resps.push(await like(token, topicId));
-            await delay(600);
+            await delay(config.network_delay);
         }
     }
     return resps;
@@ -126,7 +127,7 @@ async function task3(token, posts) {
             headers: { Authorization: token, "Content-Type": "application/json" }
         });
         resps.push(await resp.json());
-        await delay(600);
+        await delay(config.network_delay);
     }
     return resps;
 }
@@ -146,7 +147,8 @@ async function exchange(token, exchanged) {
     const [exchangeList, memberInfoResp] = await Promise.all([getExchangeList(token), getInfo(token)]);
     // 按exchange_id升序排序，并将信息核移至下标1位置
     exchangeList.sort((a, b) => a.exchange_id - b.exchange_id);
-    exchangeList.splice(1, 0, exchangeList.pop());
+    let item = exchangeList.pop();
+    exchangeList.splice(1, 0, item.exchange_id === 5 ? item : exchangeList.splice(4, 1)[0]);
     let score = (await memberInfoResp.json()).data.user.score;
     for (const item of exchangeList) {
         const id = item.exchange_id;
@@ -159,7 +161,7 @@ async function exchange(token, exchanged) {
             item.exchange_count++;
             score -= item.use_score;
             result[id] = await resp.json();
-            await delay(600);
+            await delay(config.network_delay);
         }
     }
     Object.values(result).every(successful) && setKey(EXCHANGED);
@@ -183,6 +185,11 @@ async function getExchangeList(token) {
     });
     return (await resp.json()).data.list;
 }
+/**
+ * 过滤已点赞帖子
+ * @param {*} list 
+ * @returns {Array}
+ */
 function notLikeFilter(list) {
     return list.filter(item => !item.is_like);
 }
@@ -238,9 +245,10 @@ async function performTask(token, performed) {
     }
     const posts = await getPost(token);
     let filtered = notLikeFilter(posts);
-    // 如果没有符合条件的数据，则使用原始数据（但估计会很少遇到，毕竟是极端情况）
-    if (!filtered.length) {
-        filtered = posts;
+    // 如果没有或少于符合条件的数据，则使用原始数据填充（但估计会很少遇到，毕竟是极端情况）
+    if (filtered.length < 3) {
+        // filtered = posts;
+        filtered.push(...posts.slice(0, (3 - filtered.length)));
     }
     const _posts = filtered.slice(0, 3);
     pending[TASK_1] && (pending[TASK_1] = task1(token, _posts));
