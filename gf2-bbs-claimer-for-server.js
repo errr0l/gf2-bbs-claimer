@@ -7,7 +7,7 @@ const DEFAULT = {
     notification: 1,
     base_url: 'https://gf2-bbs-api.exiliumgf.com',
     threshold: 600, // 判断token是否过期阈值（单位秒）
-    network_delay: 600
+    network_delay: 600 // 请求延迟（单位毫秒）
 };
 const configPath = path.resolve(__dirname, './config.json');
 const _config = getConfig(configPath);
@@ -56,7 +56,6 @@ async function login(account, password) {
 function getExpiration() {
     const date = new Date();
     const millseconds = date.getTime();
-    // return (23 - date.getHours()) * 60 * 60 + (59 - date.getMinutes()) * 60 + 59 - date.getSeconds();
     date.setHours(24, 0, 0, 0);
     return date.getTime() - millseconds;
 }
@@ -132,11 +131,8 @@ async function task3(token, posts) {
     return resps;
 }
 // 兑换物品；根据配置文件中的数据进行兑换；
-// 配置文件exchanging中，每个数字所代表的含义；1->情报拼图，2->萨狄斯金，3->战场报告，4->解析图纸，5->基原信息核；
-// 关于兑换的方式，存在两种情况：
-// - 积分足够时，将所有物品兑换完；
-// - 积分不足时，优先兑换1，其次是5234；
-// 但若每日都完成任务时，不会存在积分不足的问题。
+// 1->情报拼图，2->萨狄斯金，3->战场报告，4->解析图纸，5->基原信息核，此外，还有不定时加入的限定物品；
+// 每日都完成任务时，不会存在积分不足的问题。
 async function exchange(token, exchanged) {
     log(exchange.name);
     if (exchanged) {
@@ -145,10 +141,6 @@ async function exchange(token, exchanged) {
     }
     const result = {};
     const [exchangeList, memberInfoResp] = await Promise.all([getExchangeList(token), getInfo(token)]);
-    // 按exchange_id升序排序，并将信息核移至下标1位置
-    exchangeList.sort((a, b) => a.exchange_id - b.exchange_id);
-    let item = exchangeList.pop();
-    exchangeList.splice(1, 0, item.exchange_id === 5 ? item : exchangeList.splice(4, 1)[0]);
     let score = (await memberInfoResp.json()).data.user.score;
     for (const item of exchangeList) {
         const id = item.exchange_id;
@@ -187,7 +179,7 @@ async function getExchangeList(token) {
 }
 /**
  * 过滤已点赞帖子
- * @param {*} list 
+ * @param {*} list posts
  * @returns {Array}
  */
 function notLikeFilter(list) {
@@ -213,7 +205,6 @@ function getKey(key) {
     return "";
 }
 function setKey(key) {
-    //document.cookie = `${key}=1; max-age=${getSecondsBeforeDawn()}; path=/;`;
     let value;
     if (!(value = config[key])) {
         value = getExpiration();
@@ -247,7 +238,6 @@ async function performTask(token, performed) {
     let filtered = notLikeFilter(posts);
     // 如果没有或少于符合条件的数据，则使用原始数据填充（但估计会很少遇到，毕竟是极端情况）
     if (filtered.length < 3) {
-        // filtered = posts;
         filtered.push(...posts.slice(0, (3 - filtered.length)));
     }
     const _posts = filtered.slice(0, 3);
@@ -265,7 +255,6 @@ async function runner(token, states) {
     const resp2signIn = await signIn(token, states[SIGNED]);
     if (resp2signIn) {
         console.log(resp2signIn);
-        //resp2signIn[SIGNED] && updateNodeForSigning();
     }
     const resp2performTask = await performTask(token, states[PERFORMED]);
     resp2performTask && console.log(resp2performTask);
@@ -287,15 +276,12 @@ function atob(input) {
     const buffer = Buffer.from(input, 'base64');
     return buffer.toString('binary');
 }
-
 // 获取用户信息(其实是用于检查令牌是否有效)；
 // 测试发现，只要令牌未过期，都可获取到数据，即可存在多个令牌（服务器不记录状态）；
 // 当response.status为401时，表示令牌过期；
 // 运行一段时间之后，感觉这个校验方式不准确，常出现《前一秒校验还通过，后一秒就过期》的诡异现象，故更改判断方式，
 // 具体为解析jwt中的载荷数据作为依据，如果过期时间与当前时间的差值小于等于10分钟时，判断为过期
 async function checkToken(token) {
-    // const resp = await getInfo(token);
-    // return resp.status === 200;
     const payload = JSON.parse(atob(token.split(".")[1]));
     return (payload.exp - (Date.now() / 1000)) > config.threshold;
 }
@@ -313,7 +299,6 @@ function saveConfig() {
     }, 5000);
 }
 function saveToken(token) {
-    //localStorage.setItem('key', token);
     config['token'] = token;
     saveConfig();
 }
@@ -609,7 +594,7 @@ const ke = function(t) {
     s
 };
 function getToken() {
-    return config['token'];
+    return config['token'] || "";
 }
 process.on('uncaughtException', errorHandler);
 process.on('unhandledRejection', errorHandler);

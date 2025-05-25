@@ -10,6 +10,8 @@
 // @grant        window.onurlchange
 // @resource     config http://your/path/to/config.json
 // @license      MIT
+// @downloadURL https://update.greasyfork.org/scripts/529142/%E5%B0%91%E5%89%8D2bbs%E8%87%AA%E5%8A%A8%E5%85%91%E6%8D%A2%E7%89%A9%E5%93%81%E8%84%9A%E6%9C%AC.user.js
+// @updateURL https://update.greasyfork.org/scripts/529142/%E5%B0%91%E5%89%8D2bbs%E8%87%AA%E5%8A%A8%E5%85%91%E6%8D%A2%E7%89%A9%E5%93%81%E8%84%9A%E6%9C%AC.meta.js
 // ==/UserScript==
 
 (function() {
@@ -27,7 +29,7 @@
         notification: 1,
         base_url: 'https://gf2-bbs-api.exiliumgf.com',
         threshold: 600, // 判断token是否过期阈值（单位秒）
-        network_delay: 600
+        network_delay: 600 // 请求延迟（单位毫秒）
     };
     const configPath = getConfigPath();
     const configPathNotEmpty = configPath !== '';
@@ -156,11 +158,8 @@
         return resps;
     }
     // 兑换物品；根据配置文件中的数据进行兑换；
-    // 配置文件exchanging中，每个数字所代表的含义；1->情报拼图，2->萨狄斯金，3->战场报告，4->解析图纸，5->基原信息核；
-    // 关于兑换的方式，存在两种情况：
-    // - 积分足够时，将所有物品兑换完；
-    // - 积分不足时，优先兑换1，其次是5234；
-    // 但若每日都完成任务时，不会存在积分不足的问题。
+    // 1->情报拼图，2->萨狄斯金，3->战场报告，4->解析图纸，5->基原信息核，此外，还有不定时加入的限定物品；
+    // 每日都完成任务时，不会存在积分不足的问题。
     async function exchange(token, exchanged) {
         log(exchange.name);
         if (exchanged) {
@@ -169,10 +168,6 @@
         }
         const result = {};
         const [exchangeList, memberInfoResp] = await Promise.all([getExchangeList(token), getInfo(token)]);
-        // 按exchange_id升序排序，并将信息核移至下标1位置
-        exchangeList.sort((a, b) => a.exchange_id - b.exchange_id);
-        let item = exchangeList.pop();
-        exchangeList.splice(1, 0, item.exchange_id === 5 ? item : exchangeList.splice(4, 1)[0]);
         let score = (await memberInfoResp.json()).data.user.score;
         for (const item of exchangeList) {
             const id = item.exchange_id;
@@ -211,7 +206,7 @@
     }
     /**
      * 过滤已点赞帖子
-     * @param {*} list 
+     * @param {*} list posts
      * @returns {Array}
      */
     function notLikeFilter(list) {
