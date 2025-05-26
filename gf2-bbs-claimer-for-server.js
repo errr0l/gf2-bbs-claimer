@@ -56,8 +56,8 @@ async function login(account, password) {
 function getExpiration() {
     const date = new Date();
     const millseconds = date.getTime();
-    date.setHours(24, 0, 0, 0);
-    return date.getTime() - millseconds;
+    const ms2 = date.setHours(24, 0, 0, 0);
+    return ms2 - millseconds;
 }
 // 是否已经签到
 async function signed(token) {
@@ -97,14 +97,14 @@ async function like(token, topicId) {
 // 点赞(三个帖子)；
 // 如果帖子为"点赞"状态，则需要先取消点赞，再重新点赞
 async function task1(token, posts) {
-    const resps = [];
-    for(const item of posts) {
-        const topicId = item.topic_id;
-        resps.push(await like(token, topicId));
+    let resps = [], index = 0;
+    while (index < posts.length) {
+        const item = posts[index++];
+        resps.push(await like(token, item.topic_id));
         await delay(config.network_delay);
         if (item.is_like) {
-            resps.push(await like(token, topicId));
-            await delay(config.network_delay);
+            item.is_like = false;
+            index--;
         }
     }
     return resps;
@@ -593,6 +593,7 @@ const ke = function(t) {
     return s = be(o) + be(a) + be(n) + be(i),
     s
 };
+// ----------------------------------
 function getToken() {
     return config['token'] || "";
 }

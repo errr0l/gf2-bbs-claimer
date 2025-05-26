@@ -10,8 +10,8 @@
 // @grant        window.onurlchange
 // @resource     config http://your/path/to/config.json
 // @license      MIT
-// @downloadURL https://update.greasyfork.org/scripts/529142/%E5%B0%91%E5%89%8D2bbs%E8%87%AA%E5%8A%A8%E5%85%91%E6%8D%A2%E7%89%A9%E5%93%81%E8%84%9A%E6%9C%AC.user.js
-// @updateURL https://update.greasyfork.org/scripts/529142/%E5%B0%91%E5%89%8D2bbs%E8%87%AA%E5%8A%A8%E5%85%91%E6%8D%A2%E7%89%A9%E5%93%81%E8%84%9A%E6%9C%AC.meta.js
+// @downloadURL  https://update.greasyfork.org/scripts/529142/%E5%B0%91%E5%89%8D2bbs%E8%87%AA%E5%8A%A8%E5%85%91%E6%8D%A2%E7%89%A9%E5%93%81%E8%84%9A%E6%9C%AC.user.js
+// @updateURL    https://update.greasyfork.org/scripts/529142/%E5%B0%91%E5%89%8D2bbs%E8%87%AA%E5%8A%A8%E5%85%91%E6%8D%A2%E7%89%A9%E5%93%81%E8%84%9A%E6%9C%AC.meta.js
 // ==/UserScript==
 
 (function() {
@@ -82,7 +82,6 @@
     function getExpiration() {
         const date = new Date();
         const ms1 = date.getTime();
-        // return (23 - date.getHours()) * 60 * 60 + (59 - date.getMinutes()) * 60 + 59 - date.getSeconds();
         const ms2 = date.setHours(24, 0, 0, 0);
         return ((ms2 - ms1) / 1000) >> 0;
     }
@@ -124,14 +123,14 @@
     // 点赞(三个帖子)；
     // 如果帖子为"点赞"状态，则需要先取消点赞，再重新点赞
     async function task1(token, posts) {
-        const resps = [];
-        for(const item of posts) {
-            const topicId = item.topic_id;
-            resps.push(await like(token, topicId));
+        let resps = [], index = 0;
+        while (index < posts.length) {
+            const item = posts[index++];
+            resps.push(await like(token, item.topic_id));
             await delay(config.network_delay);
             if (item.is_like) {
-                resps.push(await like(token, topicId));
-                await delay(config.network_delay);
+                item.is_like = false;
+                index--;
             }
         }
         return resps;
@@ -255,7 +254,6 @@
         let filtered = notLikeFilter(posts);
         // 如果没有或少于符合条件的数据，则使用原始数据填充（但估计会很少遇到，毕竟是极端情况）
         if (filtered.length < 3) {
-            // filtered = posts;
             filtered.push(...posts.slice(0, (3 - filtered.length)));
         }
         const _posts = filtered.slice(0, 3);
@@ -307,8 +305,6 @@
     // 当response.status为401时，表示令牌过期；
     // 更新判断方式；
     async function checkToken(token) {
-        // const resp = await getInfo(token);
-        // return resp.status === 200;
         const payload = JSON.parse(atob(token.split(".")[1]));
         return (payload.exp - (Date.now() / 1000)) > config.threshold;
     }
@@ -345,26 +341,24 @@
         node.style = `${NOTIFICATION_STYLE}${location.pathname.startsWith("/m") ? NOTIFICATION_STYLE_FOR_PHONE : NOTIFICATION_STYLE_FOR_PC}top: -${head.clientHeight}px; height: ${head.clientHeight}px;`;
         node.innerText = message;
         head.appendChild(node);
+        let callback;
         if (duration > 0) {
-            promise = new Promise(resolve => {
-                setTimeout(() => {
-                    node.style.top = "0";
-                    removeNotification(node, duration);
-                    _node = null;
-                    promise = null;
-                    resolve();
-                }, _delay);
-            });
+            callback = resolve => {
+                node.style.top = "0";
+                removeNotification(node, duration);
+                _node = null;
+                promise = null;
+                resolve();
+            };
         }
         else {
-            promise = new Promise(resolve => {
-                setTimeout(() => {
-                    node.style.top = "0";
-                    promise = null;
-                    resolve();
-                }, _delay);
-            });
+            callback = resolve => {
+                node.style.top = "0";
+                promise = null;
+                resolve();
+            };
         }
+        promise = new Promise(resolve => setTimeout(callback.bind(null, resolve), _delay));
     }
     function notice1(config) {
         if (+config.notification) {
@@ -645,6 +639,7 @@
         return s = be(o) + be(a) + be(n) + be(i),
         s
     };
+    // ----------------------------------
     function getToken() {
         return localStorage.getItem('key') || "";
     }
@@ -675,7 +670,6 @@
         };
         window.addEventListener('urlchange', handler);
     }
-    // ----------------------------------
     window.addEventListener('error', errorHandler);
     let token;
     if (location.pathname.includes("/loading") && location.search.includes("token=")) {

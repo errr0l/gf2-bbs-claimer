@@ -12,3 +12,34 @@
 // }
 
 // console.log(getSecondsBeforeDawn());
+
+async function task1(token, posts) {
+    let resps = [], index = 0;
+    while (index < posts.length) {
+        const item = posts[index++];
+        resps.push({ ...item });
+        if (item.is_like) {
+            item.is_like = false;
+            index--;
+        }
+    }
+    return resps;
+}
+
+const posts = [
+    {
+        id: 1,
+        is_like: true,
+    },
+    {
+        id: 2,
+        is_like: false,
+    },
+    {
+        id: 3,
+        is_like: true,
+    },
+];
+
+const r = task1("", posts);
+console.log(r);
