@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         少前2bbs自动兑换物品脚本
 // @namespace    http://tampermonkey.net/
-// @version      1.1.5
+// @version      1.1.6
 // @description  一个简单的少前2论坛自动兑换物品脚本(包括签到)；当因登录凭证过期时，可根据提供的账号密码自动登录(可选)；其中，若提供账号，则需要启用油猴插件"允许访问文件网址"权限，这是读取文件接口GM_getResourceText()的硬性要求，具体账号配置请查看文档。以chrome为例，浏览器右上角"更多设置(三点)" -> "拓展程序" -> "管理拓展程序" -> "篡改猴" -> "详情" -> "允许访问文件网址" -> 启用；此外，本脚本还提供了服务器版本，如有需要，可前往仓库(https://github.com/virtua1nova/gf2-bbs-claimer/blob/master/gf2-bbs-claimer-for-server.js)获取。
 // @author       virtual___nova@outlook.com
 // @match        https://gf2-bbs.exiliumgf.com/*
@@ -31,6 +31,7 @@
         threshold: 600, // 判断token是否过期阈值（单位秒）
         network_delay: 600 // 请求延迟（单位毫秒）
     };
+    let _node;
     const configPath = getConfigPath();
     const configPathNotEmpty = configPath !== '';
     !configPathNotEmpty && log('配置文件路径为空', 'warn');
@@ -270,7 +271,11 @@
     // 更新节点(签到成功后)；pc貌似有点问题，即使刷新页面，文字也依旧不变；
     function updateNodeForSigning() {
         const selector = location.pathname.startsWith("/m") ? '.nav_con div:first-child' : '.btns .btn';
-        const node = document.querySelector(selector);
+        const node = document.querySelector(selector) || { failed: true };
+        if (!node.failed) {
+            log("未获取到" + selector);
+            return;
+        }
         const [img, a, b] = [...node.children];
         if (img.src !== SIGNED_IMG) {
             img.src = SIGNED_IMG;
@@ -323,7 +328,7 @@
     function removeNotification(node, delay) {
         return new Promise(resolve => {
             setTimeout(() => {
-                node.style.top = "-60px";
+                node.style.top = "-199px";
                 setTimeout(() => {
                     node.remove();
                     resolve();
@@ -331,34 +336,35 @@
             }, delay);
         })
     }
-    let _node, promise;
     async function notice(message, duration, _delay=50) {
-        promise && await promise;
         _node && await removeNotification(_node, 1000);
         const node = document.createElement("div");
         _node = node;
-        const head = document.querySelector('.head');
+        const head = document.querySelector('.head') || { clientHeight: 60, failed: true };
         node.style = `${NOTIFICATION_STYLE}${location.pathname.startsWith("/m") ? NOTIFICATION_STYLE_FOR_PHONE : NOTIFICATION_STYLE_FOR_PC}top: -${head.clientHeight}px; height: ${head.clientHeight}px;`;
         node.innerText = message;
-        head.appendChild(node);
+        if (head.failed) {
+            log("未获取到 .head")
+            node.style.position = "fixed";
+            document.body.appendChild(node);
+        }
+        else {
+            head.appendChild(node);
+        }
         let callback;
         if (duration > 0) {
-            callback = resolve => {
+            callback = () => {
                 node.style.top = "0";
                 removeNotification(node, duration);
                 _node = null;
-                promise = null;
-                resolve();
             };
         }
         else {
-            callback = resolve => {
+            callback = () => {
                 node.style.top = "0";
-                promise = null;
-                resolve();
             };
         }
-        promise = new Promise(resolve => setTimeout(callback.bind(null, resolve), _delay));
+        setTimeout(callback, _delay)
     }
     function notice1(config) {
         if (+config.notification) {
@@ -671,47 +677,49 @@
         window.addEventListener('urlchange', handler);
     }
     window.addEventListener('error', errorHandler);
-    let token;
-    if (location.pathname.includes("/loading") && location.search.includes("token=")) {
-        console.warn(`等待登录完成...`);
-        waitingForLogin();
-    }
-    // 令牌不存在或过期时，进行登录；但若不提供配置时，则由用户自己进行
-    else if ((token = getToken())) {
-        notice2(config);
-        checkToken(token)
-            .then(async valid => {
-                if (!valid) {
-                    if (configPathNotEmpty) {
-                        token = await login(config.account, config.password);
-                        saveToken(token);
+    setTimeout(() => {
+        let token;
+        if (location.pathname.includes("/loading") && location.search.includes("token=")) {
+            console.warn(`等待登录完成...`);
+            waitingForLogin();
+        }
+        // 令牌不存在或过期时，进行登录；但若不提供配置时，则由用户自己进行
+        else if ((token = getToken())) {
+            notice2(config);
+            checkToken(token)
+                .then(async valid => {
+                    if (!valid) {
+                        if (configPathNotEmpty) {
+                            token = await login(config.account, config.password);
+                            saveToken(token);
+                        }
+                        else {
+                            notice('请先登录', 3000);
+                            log(`${SCRIPT_NAME}执行完成.`);
+                            return;
+                        }
                     }
-                    else {
-                        notice('请先登录', 3000);
-                        log(`${SCRIPT_NAME}执行完成.`);
-                        return;
-                    }
-                }
-                await runner(token, states);
-                log(`${SCRIPT_NAME}执行完成.`);
-                notice1(config);
-            })
-            .catch(errorHandler);
-    }
-    else if (configPathNotEmpty) {
-        notice2(config);
-        login(config.account, config.password)
-            .then(async token => {
-                saveToken(token);
-                await runner(token, states);
-                log(`${SCRIPT_NAME}执行完成.`);
-                notice1(config);
-            })
-            .catch(errorHandler);
-    }
-    else {
-        log(`由于令牌已过期，且未提供配置文件，或当前为移动端环境，本次未执行任何有效动作.`, 'warn');
-        console.warn(`尝试等待登录...`);
-        waitingForLogin();
-    }
+                    await runner(token, states);
+                    log(`${SCRIPT_NAME}执行完成.`);
+                    notice1(config);
+                })
+                .catch(errorHandler);
+        }
+        else if (configPathNotEmpty) {
+            notice2(config);
+            login(config.account, config.password)
+                .then(async token => {
+                    saveToken(token);
+                    await runner(token, states);
+                    log(`${SCRIPT_NAME}执行完成.`);
+                    notice1(config);
+                })
+                .catch(errorHandler);
+        }
+        else {
+            log(`由于令牌已过期，且未提供配置文件，或当前为移动端环境，本次未执行任何有效动作.`, 'warn');
+            console.warn(`尝试等待登录...`);
+            waitingForLogin();
+        }
+    }, 1000);
 })();
