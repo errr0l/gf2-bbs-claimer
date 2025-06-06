@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         少前2bbs自动兑换物品脚本
 // @namespace    http://tampermonkey.net/
-// @version      1.1.6
+// @version      1.2.0
 // @description  一个简单的少前2论坛自动兑换物品脚本(包括签到)；当因登录凭证过期时，可根据提供的账号密码自动登录(可选)；其中，若提供账号，则需要启用油猴插件"允许访问文件网址"权限，这是读取文件接口GM_getResourceText()的硬性要求，具体账号配置请查看文档。以chrome为例，浏览器右上角"更多设置(三点)" -> "拓展程序" -> "管理拓展程序" -> "篡改猴" -> "详情" -> "允许访问文件网址" -> 启用；此外，本脚本还提供了服务器版本，如有需要，可前往仓库(https://github.com/virtua1nova/gf2-bbs-claimer/blob/master/gf2-bbs-claimer-for-server.js)获取。
 // @author       virtual___nova@outlook.com
 // @match        https://gf2-bbs.exiliumgf.com/*
@@ -272,8 +272,8 @@
     function updateNodeForSigning() {
         const selector = location.pathname.startsWith("/m") ? '.nav_con div:first-child' : '.btns .btn';
         const node = document.querySelector(selector) || { failed: true };
-        if (!node.failed) {
-            log("未获取到" + selector);
+        if (node.failed) {
+            log("未获取到: " + selector);
             return;
         }
         const [img, a, b] = [...node.children];
@@ -344,7 +344,7 @@
         node.style = `${NOTIFICATION_STYLE}${location.pathname.startsWith("/m") ? NOTIFICATION_STYLE_FOR_PHONE : NOTIFICATION_STYLE_FOR_PC}top: -${head.clientHeight}px; height: ${head.clientHeight}px;`;
         node.innerText = message;
         if (head.failed) {
-            log("未获取到 .head")
+            log("未获取到: .head");
             node.style.position = "fixed";
             document.body.appendChild(node);
         }
@@ -677,14 +677,14 @@
         window.addEventListener('urlchange', handler);
     }
     window.addEventListener('error', errorHandler);
+    if (location.pathname.includes("/loading") && location.search.includes("token=")) {
+        console.warn(`等待登录完成...`);
+        waitingForLogin();
+    }
     setTimeout(() => {
         let token;
-        if (location.pathname.includes("/loading") && location.search.includes("token=")) {
-            console.warn(`等待登录完成...`);
-            waitingForLogin();
-        }
         // 令牌不存在或过期时，进行登录；但若不提供配置时，则由用户自己进行
-        else if ((token = getToken())) {
+        if ((token = getToken())) {
             notice2(config);
             checkToken(token)
                 .then(async valid => {
@@ -694,8 +694,10 @@
                             saveToken(token);
                         }
                         else {
-                            notice('请先登录', 3000);
-                            log(`${SCRIPT_NAME}执行完成.`);
+                            notice('请重新登录.', 3000);
+                            // log(`${SCRIPT_NAME}执行完成.`);
+                            console.warn(`令牌已过期，等待重新登录...`);
+                            waitingForLogin();
                             return;
                         }
                     }
