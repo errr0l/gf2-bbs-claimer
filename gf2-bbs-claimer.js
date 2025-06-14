@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         少前2bbs自动兑换物品脚本
 // @namespace    http://tampermonkey.net/
-// @version      1.2.0
+// @version      1.2.1
 // @description  一个简单的少前2论坛自动兑换物品脚本(包括签到)；当因登录凭证过期时，可根据提供的账号密码自动登录(可选)；其中，若提供账号，则需要启用油猴插件"允许访问文件网址"权限，这是读取文件接口GM_getResourceText()的硬性要求，具体账号配置请查看文档。以chrome为例，浏览器右上角"更多设置(三点)" -> "拓展程序" -> "管理拓展程序" -> "篡改猴" -> "详情" -> "允许访问文件网址" -> 启用；此外，本脚本还提供了服务器版本，如有需要，可前往仓库(https://github.com/virtua1nova/gf2-bbs-claimer/blob/master/gf2-bbs-claimer-for-server.js)获取。
 // @author       virtual___nova@outlook.com
 // @match        https://gf2-bbs.exiliumgf.com/*
@@ -649,6 +649,9 @@
     function getToken() {
         return localStorage.getItem('key') || "";
     }
+    function clearToken() {
+        return localStorage.removeItem('key');
+    }
     // 等待登录；
     // 通过监听url的变化，当检测到从/login、/loading路径跳转时，尝试获取令牌进行判断（不提供账号密码时才会调用该方法）
     function waitingForLogin() {
@@ -689,6 +692,8 @@
             checkToken(token)
                 .then(async valid => {
                     if (!valid) {
+                        // 移除过期令牌
+                        clearToken();
                         if (configPathNotEmpty) {
                             token = await login(config.account, config.password);
                             saveToken(token);
